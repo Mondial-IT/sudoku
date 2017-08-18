@@ -1,0 +1,945 @@
+<head>
+	<!-- copyright (c) 2017 GameNable.com Mondial-IT BV - do not copy or use without consent of gameNable.com -->
+
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<style>
+#sudoku{
+	margin-left:0%;
+	text-align:center;
+	
+}
+	#sudoku-saves{
+	    clear: both;
+		text-align: left;
+		padding-top: 25px;
+		font-size: 12px;
+		width: 670px;
+		user-select:none;
+	}
+	#sudoku-saves>div{
+		display: inline-block;
+		margin: 10px 2px;
+	}
+
+	#sudoku-saves a{
+		padding: 0px 12px;
+		background: #20231e;
+		border: 1px solid #333;
+		color: #888;
+		float: left;
+		border-radius: 20px;
+		font-size: 16px;
+		min-width: 10px;
+		min-height: 31px;
+		line-height: 30px;
+	
+	}
+	[href="#popupInfo2"]{
+		position: absolute;
+		left: 659px;
+		top: 0;
+	}
+	#sudokuinput{
+	    font-size: 11px;
+		color: gray;
+		width:600px;
+	}
+	.focus{
+		box-shadow:0 0 3px 3px yellow;
+	}
+	/* helpers */
+	[data-h]{
+		font-size: 12px;
+		display: inline-block;
+		color:#444;
+		width: 10px;
+		height: 17px;
+		padding-top: 2px;
+		overflow:hidden;
+
+	}
+	/* entries and helpers */
+	[data-n]{
+		border:1px solid #333;
+		font-size:28px;
+		font-family:arial;
+		padding:10px;
+		
+	}
+	/* major squares */
+	[data-m]{
+		border:3px solid #333;
+	}
+	
+	[data-ccol],[data-col]{
+		float:left;
+	}
+	[data-ccol="0"],[data-col="0"] {
+		clear: both;
+		float: left;
+	}
+
+	[data-s]{
+		width:50px;
+		height:30px;
+		outline:1px solid black;
+	}
+	
+	[data-last="1"]{
+		outline:1px solid #888;
+	}
+	[data-last="2"]{
+		outline:1px solid #777;
+	}
+	[data-last="3"]{
+		outline:1px solid #666;
+	}
+	[data-last="4"]{
+		outline:1px solid #555;
+	}
+	[data-last="5"]{
+		outline:1px solid #444;
+	}
+	[data-last="6"]{
+		outline:1px solid #333;
+	}
+	[data-last="7"]{
+		outline:1px solid #222;
+	}
+	.givenNumber{
+		color:#aaa;
+	}
+	.rowerror{
+		border-top:1px solid orange;
+		border-bottom:1px solid orange;
+	}
+	.colerror{
+		border-right:1px solid yellow;
+		border-left:1px solid yellow;
+	}
+	.merror{
+		border:1px solid red;
+	}
+	.error{
+		outline:1px solid orangered;
+	}
+	button{
+		width:100px;
+	}
+	#popupMenu{
+		padding:10px;
+		font-size:12px;
+	}
+	#popupMenu tr{
+		cursor:pointer;
+		
+	}
+	#popupMenu tr:hover{
+		outline:1px solid cadetblue;		
+	}
+	/* number in 2 other rows, and single entry is empty must be .. */
+	.uc-1-x{ color:green;}
+	/* number in 2 other cols, and single entry is empty must be .. */
+	.uc-1-y{ color:blue;}
+	/* a unique helper nr in a m */
+	.uc-2{background:darkblue;}
+	
+</style>
+
+</head>
+<body>
+<div data-role="page" data-theme="b" tabindex="0" class="ui-page ui-page-theme-b ui-page-active" style="min-height: 990px;">
+
+	<div data-role="header" role="banner" class="ui-header ui-bar-inherit">
+		<h1 class="ui-title" role="heading" aria-level="1">Sudoku helper</h1>
+	</div><!-- /header -->
+
+	<div role="main" class="ui-content">
+			<p>
+				<p>You can enter the sudoku here:&nbsp;<a href="#popupInfo" data-rel="popup" data-transition="pop" data-theme="b"  class="ui-btn ui-icon-info ui-alt-icon ui-nodisc-icon ui-btn-inline ui-btn-icon-notext ui-corner-all" title="Learn more">Learn more <span class="ui-icon ui-icon-info"></span></a></p>
+			</p>
+	
+		<form>
+		<fieldset data-role="controlgroup" data-type="horizontal" data-mini="true" style="position:relative">
+			<input id="sudokuinput"></input>
+			
+			<a href="#popupMenu" id="popupMenuLink" data-rel="popup" data-transition="pop" data-theme="b"  
+			class="ui-btn ui-icon-carat-d ui-alt-icon ui-nodisc-icon ui-btn-inline ui-btn-icon-notext ui-corner-all" 
+			style="position: absolute;top: 7px; left: 604px;height: 6px;"></span></a>
+		</fieldset>
+		</form>
+			
+		<div data-role="popup" id="popupInfo" class="ui-content" data-theme="b" style="max-width:350px;">
+				<p>Enter a Sudoku is <strong>easy</strong>. Just type every number from the sudoku, start TOP-LEFT then each row from left to right.</p>
+				<p>You see the example here on screen. For every empty square enter a 0. You can add spaces for your convenience they are not used
+					by Sudoku trainer.</p>
+		</div>
+		
+		<div data-role="popup" id="popupMenu" data-theme="b"></div>
+		
+		<div style="display:inline-block;clear:both;">	
+			<table><tr>
+				<td><input 	type="checkbox" data-role="flipswitch"	id="hulpOnOff" data-on-text="help" data-off-text="off" checked=""></td>
+				<td><input 	type="checkbox" data-role="flipswitch"	id="check1OnOff" data-on-text="hint" data-off-text="off" checked=""></td>
+				<td><a data-inline="true" href="#popupInfo3" data-rel="popup" data-transition="pop" data-theme="b"  class="ui-btn ui-icon-info ui-alt-icon ui-nodisc-icon ui-btn-inline ui-btn-icon-notext ui-corner-all" title="Learn more"></span></a></td>
+			</tr></table>
+
+			<div data-role="popup" id="popupInfo3" class="ui-content" data-theme="b" style="max-width:350px;">
+				<p>Shows where a number MUST be true, when two adjacent rectangles have two rows or columns set.
+				</p>
+			</div>
+		</div>
+		
+	</div><!-- /content -->
+
+	<div data-role="footer" role="contentinfo" class="ui-footer ui-bar-inherit">
+		<div style="width:20px;min-height:40px;;display:inline-block">
+			<a href="#popupInfo2" data-rel="popup" data-transition="pop" data-theme="b"  class="ui-btn ui-icon-info ui-alt-icon ui-nodisc-icon ui-btn-inline ui-btn-icon-notext ui-corner-all" title="Learn more"></span></a>
+
+			<div data-role="popup" id="popupInfo2" class="ui-content" data-theme="b" style="max-width:350px;">
+				<p>Here you see the steps you made. You can click a step to go back to it. You can also click below the step to switch on a little marker, to more easily track where you are.</p>
+			</div>
+		</div>
+		
+		<!-- progress links will be placed here -->
+		<div id="progress" style="display:inline-block"></div>
+		
+	</div>
+</div>
+	
+	<script>
+	
+	$(document).on('ready',function(){
+		var lastKey='';
+		var last$el='';
+		var lightsColorIndex=0;
+		var check1OnOff=true;// show when 2 adjacent m have value forcing empty value to be x
+		
+		var structuredSudoku={};
+		structuredSudoku.m=[];
+		structuredSudoku.r=[];
+		structuredSudoku.c=[];
+
+		function Sudoku(){
+			// name of this sudoko, is equal to the Given numbers of the puzzle
+			// name is used to store in local storage
+			this.name='';
+			// the string representing the sudoku puzzle
+			// example: "002070001 005000860 000050020 020080105 001360040 490000000 009006480 300800000 540900000"
+			var example="002070001 005000860 000050020 020080105 001360040 490000000 009006480 300800000 540900000";
+			this.numberString=example;
+			// string where every * marks the number in the input string is Given from the puzzle
+			// to 'lock' the given numbers from the puzzle, we added a 2nd string which indicates what number was from the original puzzle init string
+			// example" "00*0*000* 00*000**0 0000*00*0 0*00*0*0* 00***00*0 **0000000 00*00***0 *00*00000 **0*00000"
+			// where a * is, the number is from the init string, and cannot be changed by user.
+			this.givenNumbers='';
+			
+			// contains string for every change made in sudoku
+			this.saves=[];
+			// contains array of properties like the m:, n: address focussed entry (to restore correct focus entry)
+			this.other=[];
+		
+			// next index into saves array
+			this.currentSave=0;
+			// create a dom markup for this sudoku
+			createDOMSudokuMarkup();
+			
+			this.name = this.preset();// start of with a default sudoku
+			
+			recalcHelpers();
+			
+
+
+		}
+		// take the sudoku number string and givennumbers string and fill the soduku dom object
+		Sudoku.prototype.preset = function(){
+		
+			$('[data-s]').each(function(){
+				var $this=$(this);
+				$this.removeClass('givenNumber focus merror rowerror colerror');
+				$this.removeAttr('data-last');
+				$this.attr('contenteditable','true');
+			});
+			$('#progress #sudoku-saves').html('');
+			
+			$('#sudokuinput').val(this.numberString);
+			var name='';
+			var rrow=0;
+			var row=0;
+			var ccol=0;
+			var col=0;
+			var n=0;
+			var $el;
+			
+			var hasGivenNumbers= this.givenNumbers.length>80;
+			if(!hasGivenNumbers)this.givenNumbers='';
+			for(var i=0;i<this.numberString.length;i++){
+				s=this.numberString[i];
+				if("0123456789".indexOf(this.numberString[i])!==-1){
+					var value= this.numberString[i];
+					if(value==='0')value=' ';
+					
+					rrow=Math.floor(n/27);
+					row=Math.floor(n/9)%3;
+					ccol=Math.floor(n/3)%3;
+					col=n%3;
+					//console.log(this.numberString[i],rrow,ccol,row,col);
+					$el=$('[data-rrow="'+rrow+'"][data-ccol="'+ccol+'"]').find('[data-row="'+row+'"][data-col="'+col+'"] [data-s]');
+					
+					$el.text(value);
+					if(value==' '){
+						$el.addClass('isEmpty');
+						if(!hasGivenNumbers){
+							this.givenNumbers+='0';// * signals its not a givennumber from the puzzle init
+						}
+					}
+					else{
+						$el.removeClass('isEmpty');
+						if(hasGivenNumbers){
+							if(this.givenNumbers[i]=='*'){
+							// signaleer de getallen uit de opdracht
+								$el.addClass('givenNumber');	
+								$el.removeAttr('contenteditable');
+							}
+						}else{
+							this.givenNumbers+='*';// * signals its a givennumber from the puzzle init
+							// signaleer de getallen uit de opdracht
+							$el.addClass('givenNumber');	
+							$el.removeAttr('contenteditable');
+						}
+					}
+					n++;
+				}
+				else{
+					this.givenNumbers+=' ';
+				}
+			}
+			
+			// set breadcrumb links on bottom of page
+			for(var i=0;i<this.saves.length;i++){
+				console.log('breadcrumb',i,this.saves[i],JSON.stringify(this.other[i]));
+				breadcrumb(i-1, this.other[i].m, this.other[i].n, this.other[i].key);
+			}
+
+			recalcHelpers();
+			markErrors();
+
+			console.log('preset givenNumbers',this.givenNumbers);
+			return this.numberString.replace(/ /g,'');
+		}
+		function timenow(){
+			var now= new Date(), 
+				ampm= 'am', 
+				h= now.getHours(), 
+				m= now.getMinutes(), 
+				s= now.getSeconds();
+			if(h>= 12){
+				if(h>12) h -= 12;
+				ampm= 'pm';
+			}
+
+			if(m<10) m= '0'+m;
+			if(s<10) s= '0'+s;
+			return now.toLocaleDateString()+ ' ' + h + ':' + m + ':' + s + ' ' + ampm;
+		}
+		// zet de nummers om naar een string,
+		// en maak een string met the givenNumbers zodat ingetypt en uit de opgave gescheiden worden
+		// en save in localstorage as sudoku.saves[name]={name:sudoku.name, g:g, saves:saves[] }
+		Sudoku.prototype.saveSudoku=function(){
+			var s='';
+			var v='';
+			var g='';
+			var n='';
+			for(var rrow=0;rrow<3;rrow++){
+				for(var row=0;row<3;row++){
+					$('[data-rrow="'+rrow+'"] [data-row="'+row+'"]').find('[data-s]').each(function(){
+						n=$(this).text();
+						if(!n)n='0';
+						if("123456789".indexOf(n)===-1)n='0';
+						v+=n;
+						if($(this).hasClass('givenNumber')){
+							g+='*';	
+						}
+						else{
+							g+=' ';
+						}
+					});
+					v+=' ';
+					g+=' ';
+					//console.log(v);
+					//console.log(g);
+				}
+			}
+			// put the save into the input string aswell, so user can copy it
+			$('#sudokuinput').val(v);
+
+			// this is to give user some hint on what the save points where
+			// it tracks which rect. was changed and on hover blinks it.
+			var n=-1;
+			var m=-1;	
+			if(last$el){	
+				var $n=last$el.closest('[data-n]');	
+				n= $n.data('n');
+				var $m=$n.closest('[data-m]');
+				m= $m.data('m');
+			}
+			breadcrumb(this.currentSave, m,n,lastKey);
+			
+			// list of saves
+			this.saves.push(v);
+			this.other.push({date:timenow(),m:m,n:n,key:lastKey});
+			
+			this.numberString=v;
+			this.currentSave = this.saves.length;
+			
+			var saveThis = JSON.stringify({name:this.name, g:this.givenNumbers, saves:this.saves, other:this.other});
+			
+			localStorage.setItem('sudoku.saves.'+this.name,saveThis);
+			// remember the sudoku user is working on
+			localStorage.setItem('sudoku.currentName',this.name);
+			
+			for(var i=0;i<this.saves.length;i++){
+				console.log('Save',i,this.saves[i],JSON.stringify(this.other[i]));
+			}
+			console.log('SAVED',this.name,saveThis);
+			
+		}
+		
+		// this is to give user some hint on what the save points where
+		// it tracks which rect. was changed and on hover blinks it.
+		// index is index into saves array
+		function breadcrumb(index, m, n, key){
+			$('#sudoku-saves').append(
+			'<div>'+
+				'<a href="#" title="click to go back to this state of the Sudoku" '+
+				' id="'+index+'" data-m="'+m+'" data-n="'+n+'">'+key+'</a>'+
+				
+			'</div>'
+				
+				);
+		}
+		
+		Sudoku.prototype.restoreSudoku=function(name){
+			console.log('Restoring',name);
+		
+			var saved = JSON.parse(localStorage.getItem('sudoku.saves.'+name));
+			//			{
+			//	"name":	"456070001005000860000050020020080105001360040490000000009006480300800000540900000",
+			//	"g":	"***0*000*00*000**00000*00*00*00*0*0*00***00*0**000000000*00***0*00*00000**0*00000",
+			//	"saves":["456170001 005000860 000050020 020080105 001360040 490000000 009006480 300800000 540900000 "],
+			//	"other":[{	"date":"8/17/2017 11:11:09 am",	"m":-1,	"n":-1},
+			//			]}
+			if(saved){
+				var last=saved.saves.length-1;
+				this.name = name;
+				this.numberString= saved.saves[last];
+				this.givenNumbers= saved.g;
+				this.currentSave=saved.saves.length;
+				this.saves= saved.saves;
+				this.other= saved.other;
+				var other=saved.other[last];
+				var m=other.m;
+				var n=other.n;
+				last$el = $('[data-m="'+m+'"] [data-n="'+n+'"] [data-s]');
+				last$el.addClass('focus');
+				lastKey = last$el.text();
+				$('#input').val(this.numberString);
+				this.preset();
+			}
+		
+		}
+
+		// hover save links and highlight which (last) entry it contains
+		$(document).on('mouseenter','#sudoku-saves a',function(){
+			var m= $(this).data('m');
+			var n= $(this).data('n');
+			$('[data-m="'+m+'"] [data-n="'+n+'"]').css('borderColor','green');
+		});
+		$(document).on('mouseout','#sudoku-saves a',function(){
+			var m= $(this).data('m');
+			var n= $(this).data('n');
+			$('[data-m="'+m+'"] [data-n="'+n+'"]').css('borderColor','#333');
+		});
+		
+		
+		//--------------
+		// DOM FUNCTIONS
+		//--------------
+		// create the sudoku DOM object in html
+		function createDOMSudokuMarkup(){
+			var rrow=3;
+			var row=3;
+			var ccol=3;
+			var col=3;
+			var r,rr,c,cc;
+
+			var html='';	
+			var data1,data2,data3,data4;
+			
+			var m=0;
+			var helper='';
+			var i=0;
+			for(i=0;i<5;i++){
+				helper+='<div data-h="'+i+'">.</div>';
+			}
+			for(rr=0;rr<rrow*ccol;rr++){
+				
+				data1= ' data-rrow="'+Math.floor(rr/3)+'"';
+				data2= ' data-ccol="'+rr%3+'"';
+				
+				html+='<div '+data1+data2+' data-m="'+m+'">';
+				m++;
+				
+				var n=0;
+				for(r=0;r<row;r++){
+					data3= ' data-row="'+r+'"';
+					for(c=0;c<col;c++){
+						data4=' data-col="'+c+'"';
+						data5=' data-n="'+n+'"';
+						
+						html+='<div'+data3+data4+data5+'>'+helper+'<div data-s contenteditable="true">&nbsp;</div></div>';
+						n++;
+					}
+				}
+				html+='</div>';
+			}
+			html='<div id="sudoku" style="clear:both;">'+html+'</div>';
+			
+			$('[role="main"]').append(html);
+			html='<div id="sudoku-saves"></div>';
+
+			$('[data-role="footer"] #progress').append(html);
+			return html;
+		}
+		// look up all values in sudoku and signal in red where errors are made (duplicates)
+		function markErrors(){
+		
+			$('[data-s]').removeClass('error rowerror colerror merror');
+			
+			var rrow,row,set;
+			for(rrow=0;rrow<3;rrow++){
+				for(row=0;row<3;row++){
+					set=$('[data-rrow="'+rrow+'"] [data-row="'+row+'"] [data-s]');
+					check(set,'rowerror');
+				}
+			}
+			
+			var ccol,col;
+			for(ccol=0;ccol<3;ccol++){
+				for(col=0;col<3;col++){
+					set=$('[data-ccol="'+ccol+'"] [data-col="'+col+'"] [data-s]');
+					check(set,'colerror');
+				}
+			}
+			var m;
+			for(m=0;m<9;m++){
+				set= $('[data-m="'+m+'"]').find('[data-s]');
+				check(set,'merror');
+			}
+			
+				
+			function check($set, _class){
+				// find duplicate
+				var s={};
+				var n;
+					$set
+					.each(function(){ 
+						n=$(this).text();
+						$(this).removeClass(_class);
+						if($(this).hasClass('isEmpty')){
+							
+						}else{
+							if(n){
+								if(s[n]!==undefined){
+									$(this).addClass(_class).addClass('error');
+									s[n].addClass('error');
+								}
+								else{
+									s[n]=$(this);
+								}
+							}
+						}
+					});
+			}
+		}	
+		// zoek welke niet voorkomen in de rij
+		function notInRow(rrow,row){
+			//console.log(rrow,row);
+			var s= $('[data-rrow="'+rrow+'"] [data-row="'+row+'"] [data-s]').text();
+			//console.log(rrow,row,s);
+			var i, notin=[];
+			var nr="123456789";
+			var errors;
+			for(i=0;i<9;i++){
+				if(s.indexOf(nr[i])==-1){
+					notin.push(nr[i]);
+				}
+			}
+			return {in:s,notIn:notin}
+		}
+		// zoek welke niet voorkomen in kolom
+		function notInColumn(ccol,col){
+			var s= $('[data-ccol="'+ccol+'"] [data-col="'+col+'"] [data-s]').text();
+			//console.log(ccol,col,s);
+			var i, notin=[];
+			var nr="123456789";
+			for(i=0;i<9;i++){
+				if(s.indexOf(nr[i])==-1){
+					notin.push(nr[i]);
+				}
+			}
+			return {in:s,notIn:notin}
+		}
+		// zoek welke niet voorkomen in vierkant
+		function notInM($m){
+			var s= $m.find('[data-s]').text();
+			//console.log(s);
+			var i, notin=[];
+			var nr="123456789";
+			for(i=0;i<9;i++){
+				if(s.indexOf(nr[i])==-1){
+					notin.push(nr[i]);
+				}
+			}
+			return {in:s,notIn:notin}
+		}
+		// vul de 'niet-in' x getallen in als helper
+		function setHelper(helpers,notIns){
+			var i;
+			$(helpers).each(function(){ $(this).text(''); });
+			for(i=0;i<notIns.length&&i<5;i++){
+				$(helpers[i]).text(notIns[i]);
+			}
+		}
+		// bereken alle helper getallen = mogelijke getallen die in dit hokje gezet kunnen worden
+		
+		function recalcHelpers(){
+		console.log(structuredSudoku);
+			$('[data-s]').each(function(){
+				$el = $(this);
+				var notInRCM=[' ',' ',' ',' ',' ',' '];
+				if($el.hasClass('isEmpty')){
+					var $m= $el.closest('[data-m]');
+					var rr= $m.data('rrow');
+					var r= $el.closest('[data-n]').data('row');
+					var rowHas = notInRow(rr,r);
+structuredSudoku.r[rr*3+r]= rowHas.in.replace(/ /g,'');
+					
+					var cc= $m.data('ccol');
+					var c= $el.closest('[data-n]').data('col');
+					var colHas = notInColumn(cc,c);
+structuredSudoku.c[cc*3+c]= colHas.in.replace(/ /g,'');
+				
+					var mHas=notInM($m);
+					//console.log('row:',rowHas,'col:',colHas,'m',mHas);
+structuredSudoku.m[$m.data('m')]= mHas.in.replace(/ /g,'');
+				
+					// vind welke niet voorkomen in rij en kolom en vierkant
+					notInRCM = rowHas.notIn.filter(function(n) {
+										return colHas.notIn.indexOf(n) !== -1;
+									});
+					notInRCM = notInRCM.filter(function(n) {
+										return mHas.notIn.indexOf(n) !== -1;
+									});
+									
+					//console.log('intersect',notInRCM);
+				}
+				// update helpers
+				var $helpers = $el.parent().find('[data-h]');
+				setHelper($helpers, notInRCM);
+			});
+			console.log('structuredSudoku',structuredSudoku);
+			
+			specificChecks();
+		}
+		
+		function specificChecks(){
+		var dbg=false;
+			// check1OnOff check if adjacent have a number which forces empty single value to be of value
+		$('[data-h]').removeClass('uc-1-x uc-1-y uc-2');
+			if(check1OnOff){
+				// case X must be 2
+				// 			2
+				//			.
+				//			.
+				//	  	2
+				//	 	.
+				//		.
+				// X
+				// 3
+				// 4
+				// when 2 Q have the number, and only 1 entry left, number is known.
+				$('[data-m]').each(function(){
+					
+					// this is een matrix
+					var $m=$(this);
+					var m=$(this).data('m');
+					var d=m%3;
+					var dd=Math.floor(m/3)*3;
+					// wat gegoochel met m, om de twee x buren te vinden
+					var mx1=1;
+					var mx2=2;
+					if(d==1){
+						mx1=0;
+						mx2=2;
+					}
+					if(d==2){
+						mx1=0;
+						mx2=1;
+					}
+					// en de kolom buren
+					var my1=(m+3)%9;//1,4,7 5,8,2 6,0,3
+					var my2=(m+6)%9;
+					
+					if(dbg)console.log('FINDING EMPTY ENTRY, WITH 2 ADJACENT FILLED');
+					for(var rc=0;rc<3;rc++){
+					
+						r=$m.find('[data-row="'+rc+'"] [data-s]').text().replace(/ /g,'');
+						if(dbg)console.log('m:%s checking row %s heeft:%s',m,rc,r);	
+						if(r.length==2){// found one
+							if(dbg)console.log('%cis single x entry %s %s %s','color:purple',m,rc,r);
+						
+							// helper text thinks these can fit
+							var h=$m.find('[data-row="'+rc+'"] .isEmpty').parent().find('[data-h]').text().replace(/ /g,'');
+							if(dbg)console.log(m,dd+mx1,dd+mx2,h);
+							// lets check these
+							for(var hh=0;hh<h.length;hh++){
+								if(structuredSudoku.m[dd+mx1].indexOf(h[hh])===-1||
+									structuredSudoku.m[dd+mx2].indexOf(h[hh])===-1){
+									if(dbg)console.log('not the case for',m,dd,mx1,mx2,h[hh]);
+								}
+								else{
+									if(dbg)console.log('X empty single entry, and same nr is set in adjacent m"s, so must be: h:%s m:%s row:%s',h[hh],m,r);
+									$m.find('[data-row="'+rc+'"] .isEmpty').parent().find('[data-h]:contains('+h[hh]+')').addClass('uc-1-x');
+								}
+							}
+						}
+						
+						
+						
+						c=$m.find('[data-col="'+rc+'"] [data-s]').text().replace(/ /g,'');
+						//console.log('m:%s checking col %s heeft:%s',m,rc,c);	
+						if(c.length==2){// found one
+							if(dbg)console.log('%cis single Y entry %s %s %s','color:green',m,rc,c);
+						
+							// helper text thinks these can fit
+							var h=$m.find('[data-col="'+rc+'"] .isEmpty').parent().find('[data-h]').text().replace(/ /g,'');
+							//console.log(m,my1,my2,h);
+							// lets check these
+							for(var hh=0;hh<h.length;hh++){
+								if(structuredSudoku.m[my1].indexOf(h[hh])===-1||
+									structuredSudoku.m[my2].indexOf(h[hh])===-1){
+									//console.log('not the case for',m,my1,my2,h[hh]);
+								}
+								else{
+									if(dbg)console.log('Y empty single entry, and same nr is set in adjacent m"s, so must be: h:%s m:%s row:%s my1:%s,my2:%s',h[hh],m,c,my1,my2);
+									$m.find('[data-col="'+rc+'"] .isEmpty').parent().find('[data-h]:contains('+h[hh]+')').addClass('uc-1-y')
+								}
+							}
+						}
+						
+						
+					}
+				});
+			
+			
+				// USECASE 2
+				// use case a unique nr in the helpers, means that number is obligated
+				$('[data-m]').each(function(){
+					var $m=$(this);
+					var m=$m.data('m');
+					var helpers=[];
+					$m.find('[data-n]').each(function(){
+						helpers.push($(this).find('[data-h]').text().replace(/ /g,''));
+					})
+					// check array of helper content for unique value
+					var unique=[0,0,0,0,0,0,0,0,0,0,0];
+					for(var h=0;h<helpers.length;h++){
+						for(i=0;i<helpers[h].length;i++){
+							unique[helpers[h][i]]++;
+						}
+					}
+					n= unique.indexOf(1);
+					if(n!==-1){
+						if(dbg)console.log('unique in m:',m,unique,n,helpers);
+						$m.find('[data-h]:contains('+n+')').addClass('uc-2');
+					}
+				});
+			}
+		}
+		
+		
+		
+		
+		var calculateHelpers=true;
+
+		//--------------
+		// EVENT HANDLERS
+		//--------------
+
+		// INPUT STRING, using the on screen input for sudoku strings
+		// place it into class and make a dom display out of it.
+		$(document).on('change','#sudokuinput',function(e){
+			var ns=$(this).val();
+			sudoku.numberString=ns;
+			sudoku.givenNumbers='';
+			sudoku.name = sudoku.preset();
+			// start with fresh save array
+			sudoku.saves=[];	
+		});
+		// zet met de flipswitch de hulp functie aan/uit
+		$(document).on('change','#hulpOnOff',function(e){
+			calculateHelpers=$(this).parent().hasClass('ui-flipswitch-active');
+			if(!calculateHelpers){
+				// wis alle helpers
+				$('[data-h]').text('');
+			}
+			else{
+				// bij aanzetten recalc de helpers
+				recalcHelpers();
+			}
+		});
+		
+		// on off switch for checking specific case see specificCases()
+		$(document).on('change','#check1OnOff',function(e){
+			check1OnOff=$(this).parent().hasClass('ui-flipswitch-active');
+			recalcHelpers()
+		});
+		
+		// click on an input field
+		$(document).on('click','[contenteditable]',function(e){
+			$('[contenteditable]').removeClass('focus');
+			$(this).addClass('focus');
+		});
+		// restore a previous state
+		$(document).on('click','#sudoku-saves a',function(e){
+			var n= parseInt($(this).attr('id'));
+			if(sudoku.saves[n]){
+				sudoku.numberString = sudoku.saves[n];
+				
+				// put it in the input string, so user can copy it
+				$('#sudokuinput').val(sudoku.numberString);
+				//sudoku.currentSave= n;
+				sudoku.preset();
+				
+				// restore entry that was focused
+				var focused_m= sudoku.other[n+1].m;
+				var focused_n= sudoku.other[n+1].n;
+				var last$el = $('[data-m="'+focused_m+'"] [data-n="'+focused_n+'"] [data-s]');
+				var lastKey = last$el.text();
+				last$el.addClass('focus');
+			}
+		});
+		
+		// de v zijn alle waarden, de g heeft een * op waarden die in opgave zijn gegeven
+		$(document).on('click','#laden',function(){
+			var saves=localStorage.getItem('sudoku.save.'+sudoku.name);
+			if(saves && saves.saves.length){
+				saves= JSON.parse(saves);
+				sudoku.name= saves.name;
+				
+				sudoku.numberString= saves.saves[saves.saves.length-1];
+				sudoku.givenNumbers= saves.g;
+				sudoku.saves = saves.saves;
+				// put it in the input string, so user can copy it
+				$('#sudokuinput').val(sudoku.saves[0]);
+				sudoku.preset();
+			}
+		});
+		
+		$(document).on('keyup','[contenteditable]',function(e){
+			console.log(e);
+			var $el = $(this);
+			var key=e.key;
+
+			if(e.key=='z' && e.ctrlKey){
+				console.log('STEP BACK');
+				currentSave-=1;
+				var save = sudoku.saves.pop();
+				preset(save,sudoku.givenNumbers);
+			}
+			
+			// key in sodoku field
+			if($el.data('s')!==undefined){
+				if("0123456789".indexOf(key)==-1){
+					$el.text('');
+					$el.data('previous','');
+					$el.addClass('isEmpty');
+					
+					lastKey=' ';
+					last$el=$el;
+				}else{
+					lastKey=key;
+					last$el=$el;
+					$el.text(key);
+					$el.data('previous',key);
+					$el.removeClass('isEmpty');
+
+						// make visible which changed last
+					$el.attr('data-last',0);
+					$('[data-last]').each(function(){
+						var l=$(this).attr('data-last');
+						l=parseInt(l)+1;
+						$(this).attr('data-last',l);
+					});
+				}
+			}
+			
+			if(calculateHelpers){	// flipswitch
+				recalcHelpers();
+			}
+			
+			markErrors();
+			
+			sudoku.saveSudoku();
+		});
+	
+		// link to pop up, to select stored sudoku's from local storage
+		$(document).on('click','#popupMenuLink',function(){
+			var html='';
+			for ( var i = 0, len = localStorage.length; i < len; ++i ) {
+				//console.log( localStorage.getItem( localStorage.key( i ) ) );
+				if(localStorage.key(i).indexOf('sudoku.saves')!==-1){
+					var saved=JSON.parse(localStorage.getItem( localStorage.key( i )));
+					var last= saved.saves.length-1;
+					html+='<tr data-id="i"><td>'+saved.other[last].date+'</td><td>'+saved.name+'</td>'+
+					'<td><input type="button" data-icon="delete" data-iconpos="notext" value="Icon only"></td></tr>'+
+					'';
+				}
+			}
+			$('#popupMenu').html('<table>'+html+'</table>');
+			$('#popupMenu').enhanceWithin().popup().popup('open');
+			
+		});
+	
+		// select a saved sudoku from the popup showing the sudoku's in localstorage
+		$(document).on('click','#popupMenu tr td:nth-child(2)',function(){
+			console.log('restore');
+			sudoku.restoreSudoku( $(this).text() );
+			$('#popupMenu').popup('close');
+		});
+	
+		$(document).on('click','#popupMenu .ui-icon-delete',function(){
+			$('#popupMenu').popup('close');
+			var name=$(this).closest('tr').find('td:nth-child(2)').text() ;
+			console.log('deleted',name);
+			localStorage.removeItem('sudoku.saves.'+name);
+		});
+
+		
+		
+			var sudoku= new Sudoku();
+			var lastWorkedOn = localStorage.getItem('sudoku.currentName');
+			if(lastWorkedOn){
+				sudoku.restoreSudoku(lastWorkedOn);
+			}
+			
+
+		});	
+
+	</script>
+
+
+</body>
